@@ -37,11 +37,15 @@ export function computeAdvice(userFrame, templateFrame) {
 }
 
 function frameDistance(frame1, frame2) {
+  if (!frame1 || !frame2) return Infinity;
+  const n = Math.min(frame1.length, frame2.length);
   let sum = 0;
-  for (let k = 0; k < frame1.length; k++) {
-    const dx = frame1[k][0] - frame2[k][0];
-    const dy = frame1[k][1] - frame2[k][1];
-    const dz = (frame1[k][2] || 0) - (frame2[k][2] || 0);
+  for (let k = 0; k < n; k++) {
+    const p1 = frame1[k] || [0,0,0];
+    const p2 = frame2[k] || [0,0,0];
+    const dx = (p1[0] || 0) - (p2[0] || 0);
+    const dy = (p1[1] || 0) - (p2[1] || 0);
+    const dz = (p1[2] || 0) - (p2[2] || 0);
     sum += Math.sqrt(dx*dx + dy*dy + dz*dz);
   }
   return sum;

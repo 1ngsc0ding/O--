@@ -28,11 +28,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 
 <script type="module">
-<!-- DTW module -->
-import { loadTemplate } from './dtw/loadTemplate.js';
-import { addFrame, getUserSequence } from './dtw/sequenceManger.js';
-import { computeDTW } from './dtw/dtw.js';
-import { displayScore } from './dtw/dtwUI.js';
+
+import { loadTemplate } from "./templateLoader.js"
+import { addFrame, getUserSequence } from './suquenceManager.js';
+import { computeDTW } from './dtw.js';
+import { displayScore } from './dtwUI.js';
 
 const oriVideo = document.getElementById("oriVideo");
 const poseCanvas = document.getElementById("poseCanvas");
@@ -52,7 +52,7 @@ pose.setOptions({
 
 //DTW template
 let templateLandmarks = null;
-loadTemplate('./template/choke.json').then(rawData => {
+loadTemplate('./choke.json').then(rawData => {
     const numFrames = rawData["Shoulder (11)"].length;
     const templateSequence = [];
     for (let i = 0; i < numFrames; i++) {
