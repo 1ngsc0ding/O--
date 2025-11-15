@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>video</title>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: sans-serif;
+    }
+
+    body {
+        background: #ffffff;
+        height: 100vh;
+    }
+
+    .navbar {
+        width: 100%;
+        height: 70px;
+        padding: 0 25px;
+        background: linear-gradient(90deg, #79CBBE, #5798ed);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid lch(100% 0.01 296.81 / 0.1);
+    }
+
+    .menu-icon {
+        width: 35px;
+        cursor: pointer;
+    }
+
+    .menu-icon div {
+        width: 100%;
+        height: 4px;
+        background: white;
+        margin: 6px 0;
+        border-radius: 4px;
+    }
+
+    .navbar-title {
+        color: white;
+        font-size: 22px;
+        font-weight: 600;
+        margin-left: 20px;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 25px;
+        align-items: center;
+    }
+
+    .nav-links a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 16px;
+        transition: 0.2s;
+    }
+
+    .nav-links a:hover {
+        color: white;
+        text-decoration: underline;
+    }
+
+    .profile {
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .profile img {
+        width: 70%;
+    }
+
+    .center-section {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+    }
+</style>
+
+</head>
+<body>
+
+<div class="navbar">
+
+    <div class="menu-icon">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <div class="center-section">
+        <div class="navbar-title">Oร่อย Safeswallow</div>
+
+        <div class="nav-links">
+            <a href="#">Work</a>
+            <a href="#">Services</a>
+        </div>
+    </div>
+
+    <div class="profile">
+        <img src="https://cdn-icons-png.flaticon.com/512/456/456283.png">
+    </div>
+
+</div>
+
+</body>
+</html>
