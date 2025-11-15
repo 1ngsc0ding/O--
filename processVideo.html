@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Process Video for Template</title>
+<style>
+  body { text-align: center; background: #222; color: #fff; font-family: sans-serif; padding: 20px; }
+  video { width: 640px; height: 360px; border: 1px solid #ccc; background: #000; }
+  canvas { width: 640px; height: 360px; border: 1px solid #ccc; background: #000; }
+  button { padding: 10px 20px; font-size: 16px; margin: 10px; cursor: pointer; }
+  #status { margin: 20px; font-size: 18px; }
+  #download { display: none; margin: 20px; }
+</style>
+</head>
+<body>
+<h2>Process Video to Create Template</h2>
+<video id="video" controls></video>
+<canvas id="canvas"></canvas>
+<div>
+  <button id="loadBtn">Load Video</button>
+  <button id="processBtn" disabled>Process Video</button>
+  <button id="stopBtn" disabled>Stop</button>
+</div>
+<div id="status">Ready to load video</div>
+<div id="download"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+
+<script type="module">
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const loadBtn = document.getElementById("loadBtn");
+const processBtn = document.getElementById("processBtn");
+const stopBtn = document.getElementById("stopBtn");
+const status = document.getElementById("status");
+const downloadDiv = document.getElementById("download");
+
+let isProcessing = false;
+let templateData = {
+  "Shoulder (11)": [],
+  "Elbow (13)": [],
+  "Wrist (15)": []
+};
+
+const pose = new Pose({
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+});
+
+pose.setOptions({
+  modelComplexity: 1,
+  smoothLandmarks: true,
+  enableSegmentation: false,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
+});
+
+pose.onResults((results) => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+  
+  if (results.poseLandmarks && isProcessing) {
+    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS,
+                   {color: '#00FF00', lineWidth: 2});
+    drawLandmarks(ctx, results.poseLandmarks,
+                  {color: '#FF0000', lineWidth: 1, radius: 2});
+    
+    // Extract and process landmarks
+    processFrame(results.poseLandmarks);
+  }
+});
+
+// Re-export the calculation functions for use here
+function calculateAngle(p1, p2, p3) {
+  const v1 = { x: p1.x - p2.x, y: p1.y - p2.y, z: (p1.z || 0) - (p2.z || 0) };
+  const v2 = { x: p3.x - p2.x, y: p3.y - p2.y, z: (p3.z || 0) - (p2.z || 0) };
+  
+  const dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+  const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
+  const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
+  
+  if (mag1 === 0 || mag2 === 0) return 0;
+  const cosAngle = dot / (mag1 * mag2);
+  const angle = Math.acos(Math.max(-1, Math.min(1, cosAngle)));
+  return angle * (180 / Math.PI);
+}
+
+function calculateDistance(p1, p2) {
+  const dx = p1.x - p2.x;
+  const dy = p1.y - p2.y;
+  const dz = (p1.z || 0) - (p2.z || 0);
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+function processFrame(frameLandmarks) {
+  if (!frameLandmarks || frameLandmarks.length < 24) {
+    return;
+  }
+  
+  const shoulder = frameLandmarks[11];
+  const elbow = frameLandmarks[13];
+  const wrist = frameLandmarks[15];
+  
+  if (!shoulder || !elbow || !wrist) {
+    return;
+  }
+  
+  // Calculate measurements matching our format - MUST MATCH suquenceManager.js exactly!
+  const shoulderElbowDist = calculateDistance(shoulder, elbow);
+  const shoulderValue = shoulderElbowDist * 30;
+  
+  const elbowAngle = calculateAngle(shoulder, elbow, wrist);
+  
+  // Wrist calculation - MUST match suquenceManager.js exactly
+  const dx = wrist.x - elbow.x;
+  const dy = wrist.y - elbow.y;
+  let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  if (angle < 0) angle += 360;
+  let wristValue;
+  if (angle <= 180) {
+    wristValue = 180 - angle;
+  } else {
+    wristValue = angle - 180;
+  }
+  if (wristValue < 90) {
+    wristValue = 122 + (wristValue / 90) * 54;
+  } else {
+    wristValue = Math.min(176, wristValue + 32);
+  }
+  
+  templateData["Shoulder (11)"].push(shoulderValue);
+  templateData["Elbow (13)"].push(elbowAngle);
+  templateData["Wrist (15)"].push(wristValue);
+  
+  status.textContent = `Processing... Frames: ${templateData["Shoulder (11)"].length}`;
+}
+
+loadBtn.addEventListener("click", () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "video/*";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      video.src = url;
+      video.onloadedmetadata = () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        processBtn.disabled = false;
+        status.textContent = "Video loaded. Click 'Process Video' to start.";
+      };
+    }
+  };
+  input.click();
+});
+
+processBtn.addEventListener("click", async () => {
+  if (video.readyState < 2) {
+    status.textContent = "Please load a video first";
+    return;
+  }
+  
+  // Reset template data
+  templateData = {
+    "Shoulder (11)": [],
+    "Elbow (13)": [],
+    "Wrist (15)": []
+  };
+  
+  isProcessing = true;
+  processBtn.disabled = true;
+  stopBtn.disabled = false;
+  video.currentTime = 0;
+  await video.play();
+  
+  status.textContent = "Processing video...";
+  
+  const processVideoFrame = async () => {
+    if (!isProcessing || video.paused || video.ended) {
+      isProcessing = false;
+      processBtn.disabled = false;
+      stopBtn.disabled = true;
+      
+      if (templateData["Shoulder (11)"].length > 0) {
+        status.textContent = `Processing complete! ${templateData["Shoulder (11)"].length} frames processed.`;
+        
+        // Create download link
+        const jsonStr = JSON.stringify(templateData, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "choke_template.json";
+        a.textContent = "Download Template JSON";
+        a.style.display = "inline-block";
+        a.style.padding = "10px 20px";
+        a.style.backgroundColor = "#4CAF50";
+        a.style.color = "white";
+        a.style.textDecoration = "none";
+        a.style.borderRadius = "5px";
+        downloadDiv.innerHTML = "";
+        downloadDiv.appendChild(a);
+        downloadDiv.style.display = "block";
+      } else {
+        status.textContent = "No frames processed. Make sure pose is visible in video.";
+      }
+      return;
+    }
+    
+    await pose.send({ image: video });
+    
+    // Process at ~15 fps
+    setTimeout(() => {
+      if (isProcessing) {
+        video.currentTime += 1/15; // Advance by ~1/15 second
+        requestAnimationFrame(processVideoFrame);
+      }
+    }, 1000/15);
+  };
+  
+  processVideoFrame();
+});
+
+stopBtn.addEventListener("click", () => {
+  isProcessing = false;
+  video.pause();
+  processBtn.disabled = false;
+  stopBtn.disabled = true;
+  status.textContent = `Processing stopped. ${templateData["Shoulder (11)"].length} frames processed.`;
+  
+  if (templateData["Shoulder (11)"].length > 0) {
+    const jsonStr = JSON.stringify(templateData, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "choke_template.json";
+    a.textContent = "Download Template JSON";
+    a.style.display = "inline-block";
+    a.style.padding = "10px 20px";
+    a.style.backgroundColor = "#4CAF50";
+    a.style.color = "white";
+    a.style.textDecoration = "none";
+    a.style.borderRadius = "5px";
+    downloadDiv.innerHTML = "";
+    downloadDiv.appendChild(a);
+    downloadDiv.style.display = "block";
+  }
+});
+</script>
+</body>
+</html>
+

@@ -19,8 +19,12 @@
 <body>
 <h2>ตรวจจับท่าทางด้วย Mediapipe</h2>
 <div class="camera-container">
-  <video id="oriVideo" autoplay playsinline></video>
+  <video id="oriVideo" autoplay playsinline controls></video>
   <canvas id="poseCanvas" width="1920" height="1080"></canvas>
+</div>
+<div style="margin: 20px;">
+  <button id="loadVideoBtn" style="padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px;">Load Video File</button>
+  <button id="useCameraBtn" style="padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px;">Use Camera</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
@@ -53,6 +57,11 @@ pose.setOptions({
 //DTW template
 let templateLandmarks = null;
 loadTemplate('./choke.json').then(rawData => {
+    if (!rawData) {
+        console.error("Failed to load template data");
+        return;
+    }
+    console.log("Template loaded:", rawData);
     const numFrames = rawData["Shoulder (11)"].length;
     const templateSequence = [];
     for (let i = 0; i < numFrames; i++) {
@@ -62,6 +71,9 @@ loadTemplate('./choke.json').then(rawData => {
         templateSequence.push(frame);
     }
     templateLandmarks = templateSequence;
+    console.log("Template sequence created with", templateSequence.length, "frames");
+}).catch(err => {
+    console.error("Error loading template:", err);
 });
 
 pose.onResults((results) => {
@@ -77,24 +89,95 @@ pose.onResults((results) => {
 
   //comparison
   if (templateLandmarks) {
-    const score = computeDTW(getUserSequence(), templateLandmarks);
-    displayScore(ctx, score);
+    const userSeq = getUserSequence();
+    if (userSeq.length > 0) {
+      const dtwResult = computeDTW(userSeq, templateLandmarks);
+      displayScore(ctx, dtwResult);
+      
+      // Debug info (small text in corner)
+      ctx.fillStyle = "#888888";
+      ctx.font = "16px Arial";
+      ctx.fillText(`Frames: ${userSeq.length}`, 10, poseCanvas.height - 20);
+      if (userSeq.length > 0) {
+        const lastFrame = userSeq[userSeq.length - 1];
+        if (lastFrame && lastFrame[0]) {
+          ctx.fillText(`S:${lastFrame[0][0].toFixed(1)} E:${lastFrame[0][1].toFixed(1)} W:${lastFrame[0][2].toFixed(1)}`, 10, poseCanvas.height - 40);
+        }
+      }
+    } else {
+      // Show waiting message
+      ctx.fillStyle = "#FFFF00";
+      ctx.font = "bold 32px Arial";
+      ctx.fillText("กำลังรอข้อมูลท่าทาง...", 30, 60);
+      ctx.font = "20px Arial";
+      ctx.fillText("กรุณาทำท่าทางให้เห็นในกล้อง", 30, 100);
+    }
+  } else {
+    // Template not loaded yet
+    ctx.fillStyle = "#FFFF00";
+    ctx.font = "bold 32px Arial";
+    ctx.fillText("กำลังโหลดเทมเพลต...", 30, 60);
   }
 });
 
-async function startCam() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { width: 640, height: 360, frameRate: 15 }
-  });
+let isProcessing = false;
+let videoSource = null; // 'camera' or 'video'
 
-  oriVideo.srcObject = stream;
-  await oriVideo.play();
-  requestAnimationFrame(processFrame);
+async function startCam() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 360, frameRate: 15 }
+    });
+
+    oriVideo.srcObject = stream;
+    videoSource = 'camera';
+    await oriVideo.play();
+    isProcessing = true;
+    requestAnimationFrame(processFrame);
+  } catch (err) {
+    console.error("Error accessing camera:", err);
+    alert("Could not access camera. Please check permissions.");
+  }
+}
+
+function loadVideoFile() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "video/*";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      oriVideo.srcObject = null;
+      oriVideo.src = url;
+      videoSource = 'video';
+      oriVideo.onloadedmetadata = () => {
+        oriVideo.play();
+        isProcessing = true;
+        requestAnimationFrame(processFrame);
+      };
+    }
+  };
+  input.click();
 }
 
 async function processFrame() {
+  if (!isProcessing) return;
+  
+  // Check if video is ready
+  if (oriVideo.readyState < 2) {
+    requestAnimationFrame(processFrame);
+    return;
+  }
+
   const vw = oriVideo.videoWidth;
   const vh = oriVideo.videoHeight;
+  
+  if (vw === 0 || vh === 0) {
+    requestAnimationFrame(processFrame);
+    return;
+  }
+
   const aspect = 16 / 9;
   let sx = 0, sy = 0, sw = vw, sh = vh;
   if (vw / vh > aspect) {
@@ -112,10 +195,45 @@ async function processFrame() {
   offCtx.drawImage(oriVideo, sx, sy, sw, sh, 0, 0, sw, sh);
 
   await pose.send({image: offCanvas});
-  requestAnimationFrame(processFrame);
+  
+  // Continue processing
+  if (videoSource === 'video' && oriVideo.ended) {
+    // Video ended, stop processing
+    isProcessing = false;
+    console.log("Video ended");
+  } else {
+    requestAnimationFrame(processFrame);
+  }
 }
 
-startCam();
+// Button event listeners
+document.getElementById("loadVideoBtn").addEventListener("click", () => {
+  isProcessing = false;
+  loadVideoFile();
+});
+
+document.getElementById("useCameraBtn").addEventListener("click", () => {
+  isProcessing = false;
+  if (oriVideo.srcObject) {
+    oriVideo.srcObject.getTracks().forEach(track => track.stop());
+  }
+  startCam();
+});
+
+// Auto-load video file if Dataset_Lastest_real.mp4 exists
+window.addEventListener("load", () => {
+  // Try to load the video file automatically
+  oriVideo.src = "./Dataset_Lastest_real.mp4";
+  oriVideo.onloadedmetadata = () => {
+    videoSource = 'video';
+    oriVideo.play();
+    isProcessing = true;
+    requestAnimationFrame(processFrame);
+  };
+  oriVideo.onerror = () => {
+    console.log("Video file not found, waiting for user to load video or use camera");
+  };
+});
 </script>
 </body>
 </html>
