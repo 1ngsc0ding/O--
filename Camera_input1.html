@@ -1,58 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>1080p Crop 15fps</title>
-<style>
-video, canvas {
-  width: 960px;
-  height: 540px;
-  background: #000;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Oร่อย</title>
+    <link rel="stylesheet" href="Main.css">
 </head>
 <body>
-<video id="webcamVideo" autoplay playsinline></video>
-<canvas id="outputCanvas" width="1920" height="1080"></canvas>
-
-<script>
-const video = document.getElementById("webcamVideo");
-const canvas = document.getElementById("outputCanvas");
-const ctx = canvas.getContext("2d");
-
-async function startCam() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      width: { ideal: 1920 },
-      height: { ideal: 1080 },
-      frameRate: { ideal: 30 }
-    }
-  });
-  video.srcObject = stream;
-  video.onloadedmetadata = () => drawToCanvas();
-}
-
-function drawToCanvas() {
-  const fps = 15;
-  const interval = 1000 / fps;
-  setInterval(() => {
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    const aspect = 16 / 9;
-    let sx = 0, sy = 0, sw = vw, sh = vh;
-    if (vw / vh > aspect) {
-      sw = vh * aspect;
-      sx = (vw - sw) / 2;
-    } else {
-      sh = vw / aspect;
-      sy = (vh - sh) / 2;
-    }
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 1920, 1080);
-  }, interval);
-}
-
-startCam();
-</script>
+    <h1 class="title">Oร่อย    SafeSwallow    work    services</h1>
+    <h2 class="title2">วิธีปฐมพยาบาลเบื้องต้น
+เมื่ออาหารติดคอตนเอง</h2>
+    <div class = "tap"></div>
+    <div class="video-container">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/p2U1nPoAbTc?si=mbo-I6mF3OeeQOuI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
 </body>
 </html>

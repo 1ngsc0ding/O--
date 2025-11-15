@@ -1,239 +1,216 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mediapipe JS</title>
+<body style="background-color: rgb(242, 255, 240);"></body>
+<title>video</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
 <style>
-  body { text-align: center; background: #222; color: #fff; font-family: sans-serif; }
-  h2 { margin-bottom: 20px; }
-  .camera-container { display: flex; justify-content: center; gap: 20px; }
-  video, canvas {
-    width: 480px;
-    height: 270px;
-    border: 1px solid #ccc;
-    background: #000;
-  }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: sans-serif;
+    }
+
+    body {
+        background: #ffffff;
+        height: 100vh;
+    }
+
+    .navbar {
+        margin-top: -7%;
+        position: fixed;
+        width: 95%;
+        height: 80px;
+        margin-left: 2.5%;
+        padding-left: 2%;
+        padding-right: 2%;
+        background: linear-gradient(90deg, #79CBBE, #5798ed);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid lch(100% 0.01 296.81 / 0.1);s
+    }
+
+    .menu-icon {
+        width: 35px;
+        cursor: pointer;
+    }
+
+    .menu-icon div {
+        width: 100%;
+        height: 4px;
+        background: white;
+        margin: 6px 0;
+        border-radius: 4px;
+    }
+
+    .navbar-title {
+        color: white;
+        font-size: 22px;
+        font-weight: 600;
+        margin-left: 20px;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 25px;
+        align-items: center;
+    }
+
+    .nav-links a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 16px;
+        transition: 0.2s;
+    }
+
+    .nav-links a:hover {
+        color: white;
+        text-decoration: underline;
+    }
+
+    .profile {
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .profile img {
+        width: 70%;
+    }
+
+    .center-section {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+    }
+    .video {
+        display: grid;
+        place-items: center;
+        height: 50vh;
+    }
+
+    .container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 2 คอลัมน์ */
+    gap: 20px; /* ระยะห่าง */
+    width: 550px; /* ปรับได้ */
+    margin-top: 8%;
+    margin-bottom: 3%;
+    margin-left: 30%; /* จัดให้อยู่กลางหน้า */
+    border-radius: 10%
+    
+}.itim-regular {
+  font-family: "Itim", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+    .head {
+        font-size: 55px;
+        font-family: "Itim", cursive;
+        font-weight: 400;
+        font-style: normal;
+        color: rgb(11, 60, 173)   
+        
+    }
+.box {
+    width: 180px;
+    height: 180px;
+    border: 2px solid #868686;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    border-radius: 20%
+}
+.men {
+    font-size: 50px;
+    margin-top: 45%;
+    color: #2ed7a7;
+      font-family: "Itim", cursive;
+  font-weight: 400;
+  font-style: normal;
+
+}
+.kid {
+    font-size: 50px;
+    margin-top: 40%;
+    color: #2ed7a7;
+      font-family: "Itim", cursive;
+  font-weight: 400;
+  font-style: normal;
+
+}
+        .btn {
+            font-family: "Itim", cursive;
+  font-weight: 400;
+  font-style: normal;
+            width: 70%;
+            background: #1E3A8A;
+            color: white;
+            padding: 12px;
+            margin-top: 2%;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+            font-size: 200%;
+        }
 </style>
+
 </head>
 <body>
-<h2>ตรวจจับท่าทางด้วย Mediapipe</h2>
-<div class="camera-container">
-  <video id="oriVideo" autoplay playsinline controls></video>
-  <canvas id="poseCanvas" width="1920" height="1080"></canvas>
+
+<div class="navbar">
+
+    <div class="menu-icon">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <div class="center-section">
+        <div class="navbar-title">Oร่อย Safeswallow</div>
+
+        <div class="nav-links">
+            <a href="#">Work</a>
+            <a href="#">Services</a>
+        </div>
+    </div>
+
+    <div class="profile">
+        <img src="https://cdn-icons-png.flaticon.com/512/456/456283.png" type="submit" onclick="window.location.href='login.html'">
+    </div>
+
 </div>
-<div style="margin: 20px;">
-  <button id="loadVideoBtn" style="padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px;">Load Video File</button>
-  <button id="useCameraBtn" style="padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px;">Use Camera</button>
+
+<div class="container">
+    <h1 class="men">ผู้ใหญ่</h1>
+    <img src="img1.jpg" class="box">
+    <img src="img2.jpg" class="box">
+    <h1 class="kid">เด็ก</h1>
+    <img src="img3.jpg" class="box">
+    <img src="img4.jpg" class="box">
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-
-<script type="module">
-
-import { loadTemplate } from "./templateLoader.js"
-import { addFrame, getUserSequence } from './suquenceManager.js';
-import { computeDTW } from './dtw.js';
-import { displayScore } from './dtwUI.js';
-
-const oriVideo = document.getElementById("oriVideo");
-const poseCanvas = document.getElementById("poseCanvas");
-const ctx = poseCanvas.getContext("2d");
-
-const pose = new Pose({
-  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-});
-
-pose.setOptions({
-  modelComplexity: 1,
-  smoothLandmarks: true,
-  enableSegmentation: false,
-  minDetectionConfidence: 0.5,
-  minTrackingConfidence: 0.5
-});
-
-//DTW template
-let templateLandmarks = null;
-loadTemplate('./choke.json').then(rawData => {
-    if (!rawData) {
-        console.error("Failed to load template data");
-        return;
-    }
-    console.log("Template loaded:", rawData);
-    const numFrames = rawData["Shoulder (11)"].length;
-    const templateSequence = [];
-    for (let i = 0; i < numFrames; i++) {
-        const frame = [
-            [rawData["Shoulder (11)"][i], rawData["Elbow (13)"][i], rawData["Wrist (15)"][i]]
-        ];
-        templateSequence.push(frame);
-    }
-    templateLandmarks = templateSequence;
-    console.log("Template sequence created with", templateSequence.length, "frames");
-}).catch(err => {
-    console.error("Error loading template:", err);
-});
-
-pose.onResults((results) => {
-  ctx.clearRect(0, 0, poseCanvas.width, poseCanvas.height);
-  ctx.drawImage(results.image, 0, 0, poseCanvas.width, poseCanvas.height);
-  if (results.poseLandmarks) {
-    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS,
-                   {color: '#00FF00', lineWidth: 8});
-    drawLandmarks(ctx, results.poseLandmarks,
-                  {color: '#FF0000', lineWidth: 4});
-  }
-  addFrame(results.poseLandmarks);
-
-  //comparison
-  if (templateLandmarks) {
-    const userSeq = getUserSequence();
-    if (userSeq.length > 0) {
-      const dtwResult = computeDTW(userSeq, templateLandmarks);
-      displayScore(ctx, dtwResult);
-      
-      // Debug info (small text in corner)
-      ctx.fillStyle = "#888888";
-      ctx.font = "16px Arial";
-      ctx.fillText(`Frames: ${userSeq.length}`, 10, poseCanvas.height - 20);
-      if (userSeq.length > 0) {
-        const lastFrame = userSeq[userSeq.length - 1];
-        if (lastFrame && lastFrame[0]) {
-          ctx.fillText(`S:${lastFrame[0][0].toFixed(1)} E:${lastFrame[0][1].toFixed(1)} W:${lastFrame[0][2].toFixed(1)}`, 10, poseCanvas.height - 40);
-        }
-      }
-    } else {
-      // Show waiting message
-      ctx.fillStyle = "#FFFF00";
-      ctx.font = "bold 32px Arial";
-      ctx.fillText("กำลังรอข้อมูลท่าทาง...", 30, 60);
-      ctx.font = "20px Arial";
-      ctx.fillText("กรุณาทำท่าทางให้เห็นในกล้อง", 30, 100);
-    }
-  } else {
-    // Template not loaded yet
-    ctx.fillStyle = "#FFFF00";
-    ctx.font = "bold 32px Arial";
-    ctx.fillText("กำลังโหลดเทมเพลต...", 30, 60);
-  }
-});
-
-let isProcessing = false;
-let videoSource = null; // 'camera' or 'video'
-
-async function startCam() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: 640, height: 360, frameRate: 15 }
-    });
-
-    oriVideo.srcObject = stream;
-    videoSource = 'camera';
-    await oriVideo.play();
-    isProcessing = true;
-    requestAnimationFrame(processFrame);
-  } catch (err) {
-    console.error("Error accessing camera:", err);
-    alert("Could not access camera. Please check permissions.");
-  }
-}
-
-function loadVideoFile() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "video/*";
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      oriVideo.srcObject = null;
-      oriVideo.src = url;
-      videoSource = 'video';
-      oriVideo.onloadedmetadata = () => {
-        oriVideo.play();
-        isProcessing = true;
-        requestAnimationFrame(processFrame);
-      };
-    }
-  };
-  input.click();
-}
-
-async function processFrame() {
-  if (!isProcessing) return;
-  
-  // Check if video is ready
-  if (oriVideo.readyState < 2) {
-    requestAnimationFrame(processFrame);
-    return;
-  }
-
-  const vw = oriVideo.videoWidth;
-  const vh = oriVideo.videoHeight;
-  
-  if (vw === 0 || vh === 0) {
-    requestAnimationFrame(processFrame);
-    return;
-  }
-
-  const aspect = 16 / 9;
-  let sx = 0, sy = 0, sw = vw, sh = vh;
-  if (vw / vh > aspect) {
-    sw = vh * aspect;
-    sx = (vw - sw) / 2;
-  } else {
-    sh = vw / aspect;
-    sy = (vh - sh) / 2;
-  }
-
-  const offCanvas = document.createElement('canvas');
-  offCanvas.width = sw;
-  offCanvas.height = sh;
-  const offCtx = offCanvas.getContext('2d');
-  offCtx.drawImage(oriVideo, sx, sy, sw, sh, 0, 0, sw, sh);
-
-  await pose.send({image: offCanvas});
-  
-  // Continue processing
-  if (videoSource === 'video' && oriVideo.ended) {
-    // Video ended, stop processing
-    isProcessing = false;
-    console.log("Video ended");
-  } else {
-    requestAnimationFrame(processFrame);
-  }
-}
-
-// Button event listeners
-document.getElementById("loadVideoBtn").addEventListener("click", () => {
-  isProcessing = false;
-  loadVideoFile();
-});
-
-document.getElementById("useCameraBtn").addEventListener("click", () => {
-  isProcessing = false;
-  if (oriVideo.srcObject) {
-    oriVideo.srcObject.getTracks().forEach(track => track.stop());
-  }
-  startCam();
-});
-
-// Auto-load video file if Dataset_Lastest_real.mp4 exists
-window.addEventListener("load", () => {
-  // Try to load the video file automatically
-  oriVideo.src = "./Dataset_Lastest_real.mp4";
-  oriVideo.onloadedmetadata = () => {
-    videoSource = 'video';
-    oriVideo.play();
-    isProcessing = true;
-    requestAnimationFrame(processFrame);
-  };
-  oriVideo.onerror = () => {
-    console.log("Video file not found, waiting for user to load video or use camera");
-  };
-});
-</script>
+        </div>
+    </div>
+    <div class="video">
+        <h1 class="head">คลิปสอนวิธีช่วยคนอาหารติดคอ</h1>
+        <iframe width="800" height="450" src="https://www.youtube.com/embed/ZJ3hT5LNfEo" title="วิธีช่วยคน" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <button type="submit" onclick="window.location.href='pose.html'" class="btn">ลองเลย</button>
+    </div>
+    
 </body>
 </html>
